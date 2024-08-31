@@ -8,25 +8,27 @@ import "vendor:glfw"
 GL_MAJ, GL_MIN :: 3, 3
 WIDTH, HEIGHT :: 1280, 800
 
-vertex_shader_source :: `
-#version 330 core
-layout (location = 0) in vec3 aPos;
+vertices := [?]f32 {
+	// top left [0]
+	-0.5,
+	0.5,
+	0,
 
-void main() {
-  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+	// top right [3]
+	0.5,
+	0.5,
+	0,
+
+	// bottom right [6]
+	0.5,
+	-0.5,
+	0,
+
+	// bottom left [9]
+	-0.5,
+	-0.5,
+	0,
 }
-`
-
-frag_shader_source :: `
-#version 330 core
-out vec4 FragColor;
-
-void main() {
-  FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-}
-`
-
-vertices := [?]f32{-0.5, -0.5, 0, 0.5, -0.5, 0, 0, 0.5, 0}
 
 main :: proc() {
 	if glfw.Init() != glfw.TRUE {
@@ -69,7 +71,7 @@ main :: proc() {
 	gl.EnableVertexAttribArray(0)
 
 	// Compile shaders
-	shader_program, ok := compile_shaders()
+	shader_program, ok := gl.load_shaders("shaders/vert.glsl", "shaders/frag.glsl")
 	if !ok {
 		fmt.println("Failed to compile shaders")
 		return
@@ -107,17 +109,4 @@ process_input :: proc(window: glfw.WindowHandle) {
 	if glfw.GetKey(window, glfw.KEY_ESCAPE) == glfw.PRESS {
 		glfw.SetWindowShouldClose(window, true)
 	}
-}
-
-compile_shaders :: proc() -> (program_id: u32, ok: bool) {
-	vertex_shader := gl.compile_shader_from_source(vertex_shader_source, .VERTEX_SHADER) or_return
-
-	frag_shader := gl.compile_shader_from_source(frag_shader_source, .FRAGMENT_SHADER) or_return
-
-	program_id, ok = gl.create_and_link_program({vertex_shader, frag_shader})
-
-	gl.DeleteShader(vertex_shader)
-	gl.DeleteShader(frag_shader)
-
-	return program_id, ok
 }
